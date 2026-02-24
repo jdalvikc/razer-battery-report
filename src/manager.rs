@@ -22,6 +22,10 @@ impl DeviceManager {
     }
 
     pub fn fetch_devices(&mut self) -> (Vec<u32>, Vec<u32>) {
+        if let Err(e) = self.api.refresh_devices() {
+            warn!("Failed to refresh device list: {:?}", e);
+        }
+
         let old_ids: HashSet<u32> = self
             .device_controllers
             .lock()

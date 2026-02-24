@@ -30,7 +30,9 @@ impl DeviceInfo {
             pid if pid == RAZER_DEATHADDER_V3_PRO_WIRED.pid
                 || pid == RAZER_DEATHADDER_V3_PRO_WIRELESS.pid
                 || pid == RAZER_DEATHADDER_V3_HYPERSPEED_WIRED.pid
-                || pid == RAZER_DEATHADDER_V3_HYPERSPEED_WIRELESS.pid =>
+                || pid == RAZER_DEATHADDER_V3_HYPERSPEED_WIRELESS.pid
+                || pid == RAZER_BASILISK_V3_PRO_WIRED.pid
+                || pid == RAZER_BASILISK_V3_PRO_WIRELESS.pid =>
             {
                 0x1F
             }
@@ -54,11 +56,18 @@ pub const RAZER_DEATHADDER_V2_PRO_WIRED: DeviceInfo =
 pub const RAZER_DEATHADDER_V2_PRO_WIRELESS: DeviceInfo =
     DeviceInfo::new("Razer DeathAdder V2 Pro (Wireless)", 0x007D, 0, 1, 2);
 
-pub const RAZER_DEVICE_LIST: [DeviceInfo; 6] = [
+pub const RAZER_BASILISK_V3_PRO_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro (Wired)", 0x00AA, 0, 1, 2);
+pub const RAZER_BASILISK_V3_PRO_WIRELESS: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro (Wireless)", 0x00AB, 0, 1, 2);
+
+pub const RAZER_DEVICE_LIST: [DeviceInfo; 8] = [
     RAZER_DEATHADDER_V3_PRO_WIRED,
     RAZER_DEATHADDER_V3_PRO_WIRELESS,
     RAZER_DEATHADDER_V3_HYPERSPEED_WIRED,
     RAZER_DEATHADDER_V3_HYPERSPEED_WIRELESS,
     RAZER_DEATHADDER_V2_PRO_WIRED,
     RAZER_DEATHADDER_V2_PRO_WIRELESS,
+    RAZER_BASILISK_V3_PRO_WIRED,
+    RAZER_BASILISK_V3_PRO_WIRELESS,
 ];
