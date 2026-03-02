@@ -61,10 +61,12 @@ pub const RAZER_BASILISK_V3_PRO_WIRED: DeviceInfo =
 pub const RAZER_BASILISK_V3_PRO_WIRELESS: DeviceInfo =
     DeviceInfo::new("Razer Basilisk V3 Pro (Wireless)", 0x00AB, 0, 1, 2);
 
+pub const RAZER_VIPER_ULTIMATE_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Viper Ultimate (Wired)", 0x007A, 0, 1, 2);
 pub const RAZER_VIPER_ULTIMATE_WIRELESS: DeviceInfo =
     DeviceInfo::new("Razer Viper Ultimate (Wireless)", 0x007B, 0, 1, 2);
 
-pub const RAZER_DEVICE_LIST: [DeviceInfo; 9] = [
+pub const RAZER_DEVICE_LIST: [DeviceInfo; 10] = [
     RAZER_DEATHADDER_V3_PRO_WIRED,
     RAZER_DEATHADDER_V3_PRO_WIRELESS,
     RAZER_DEATHADDER_V3_HYPERSPEED_WIRED,
@@ -73,5 +75,6 @@ pub const RAZER_DEVICE_LIST: [DeviceInfo; 9] = [
     RAZER_DEATHADDER_V2_PRO_WIRELESS,
     RAZER_BASILISK_V3_PRO_WIRED,
     RAZER_BASILISK_V3_PRO_WIRELESS,
+    RAZER_VIPER_ULTIMATE_WIRED,
     RAZER_VIPER_ULTIMATE_WIRELESS,
 ];
