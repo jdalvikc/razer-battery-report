@@ -17,6 +17,7 @@ Show your wireless Razer devices battery levels in your system tray.
 - Razer DeathAdder V3 HyperSpeed
 - Razer DeathAdder V2 Pro
 - Razer Basilisk V3 Pro
+- Razer Viper Ultimate
 
 > **Note:** If your device is not listed, you can add support for it yourself! Please see the [Adding new devices yourself](#adding-new-devices-yourself) section below. Contributions and Pull Requests are welcome!
 
