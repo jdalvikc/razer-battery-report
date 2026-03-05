@@ -32,7 +32,9 @@ impl DeviceInfo {
                 || pid == RAZER_DEATHADDER_V3_HYPERSPEED_WIRED.pid
                 || pid == RAZER_DEATHADDER_V3_HYPERSPEED_WIRELESS.pid
                 || pid == RAZER_BASILISK_V3_PRO_WIRED.pid
-                || pid == RAZER_BASILISK_V3_PRO_WIRELESS.pid =>
+                || pid == RAZER_BASILISK_V3_PRO_WIRELESS.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_WIRED.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_WIRELESS.pid =>
             {
                 0x1F
             }
@@ -41,6 +43,7 @@ impl DeviceInfo {
     }
 }
 
+// Constantes existentes (mantén las que ya están en tu archivo)
 pub const RAZER_DEATHADDER_V3_PRO_WIRED: DeviceInfo =
     DeviceInfo::new("Razer DeathAdder V3 Pro (Wired)", 0x00B6, 0, 1, 2);
 pub const RAZER_DEATHADDER_V3_PRO_WIRELESS: DeviceInfo =
@@ -66,7 +69,15 @@ pub const RAZER_VIPER_ULTIMATE_WIRED: DeviceInfo =
 pub const RAZER_VIPER_ULTIMATE_WIRELESS: DeviceInfo =
     DeviceInfo::new("Razer Viper Ultimate (Wireless)", 0x007B, 0, 1, 2);
 
-pub const RAZER_DEVICE_LIST: [DeviceInfo; 10] = [
+// Tus nuevas constantes para el 35K (Phantom Edition incluida, ya que usa los mismos PIDs)
+pub const RAZER_BASILISK_V3_PRO_35K_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wired)", 0x00D6, 0, 1, 2);
+
+pub const RAZER_BASILISK_V3_PRO_35K_WIRELESS: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00D7, 0, 1, 2);
+
+// Lista actualizada con tus dispositivos agregados al final
+pub const RAZER_DEVICE_LIST: [DeviceInfo; 12] = [
     RAZER_DEATHADDER_V3_PRO_WIRED,
     RAZER_DEATHADDER_V3_PRO_WIRELESS,
     RAZER_DEATHADDER_V3_HYPERSPEED_WIRED,
@@ -77,4 +88,6 @@ pub const RAZER_DEVICE_LIST: [DeviceInfo; 10] = [
     RAZER_BASILISK_V3_PRO_WIRELESS,
     RAZER_VIPER_ULTIMATE_WIRED,
     RAZER_VIPER_ULTIMATE_WIRELESS,
+    RAZER_BASILISK_V3_PRO_35K_WIRED,
+    RAZER_BASILISK_V3_PRO_35K_WIRELESS,
 ];
