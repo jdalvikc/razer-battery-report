@@ -99,6 +99,7 @@ pub struct DeviceController {
     pub pid: u16,
     pub report_id: u8,
     pub transaction_id: u8,
+    pub swappable_battery: bool
 }
 
 impl DeviceController {
@@ -113,12 +114,18 @@ impl DeviceController {
             .find(|device| device.pid == pid)
             .map_or(0x3F, |device| device.transaction_id());
 
+        let swappable_battery: bool = RAZER_DEVICE_LIST
+            .iter()
+            .find(|device| device.pid == pid)
+            .map_or(false, |device| device.swappable_battery);
+
         Ok(DeviceController {
             handle,
             name,
             pid,
             report_id: 0x00,
             transaction_id,
+            swappable_battery
         })
     }
 

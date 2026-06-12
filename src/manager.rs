@@ -69,6 +69,10 @@ impl DeviceManager {
         let controllers = self.device_controllers.lock();
         let controller = controllers.iter().find(|c| c.pid as u32 == id)?;
 
+        if controller.swappable_battery {
+            return Some(false);
+        }
+
         match controller.get_charging_status() {
             Ok(status) => Some(status),
             Err(err) => {
