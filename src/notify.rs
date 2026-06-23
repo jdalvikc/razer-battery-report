@@ -43,7 +43,7 @@ impl Notify {
         Ok(())
     }
 
-    pub fn device_disconnecred(&self, device_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn device_disconnected(&self, device_name: &str) -> Result<(), Box<dyn std::error::Error>> {
         Notification::new()
             .summary(&self.app_name)
             .body(&format!("{}: Disconnected", device_name))

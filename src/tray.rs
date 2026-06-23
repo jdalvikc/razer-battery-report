@@ -187,7 +187,9 @@ impl TrayApp {
                 for id in removed_devices {
                     if let Some(device) = devices_lock.remove(&id) {
                         info!("Device removed: {}", device.name);
-                        let _ = notify.device_disconnecred(&device.name);
+                        if let Err(e) = notify.device_disconnected(&device.name) {
+                            warn!("Failed to send disconnection notification: {}", e);
+                        }
                     }
                 }
 
@@ -196,7 +198,9 @@ impl TrayApp {
                         if let Some(name) = device_manager.lock().get_device_name(id) {
                             e.insert(MemoryDevice::new(name.clone(), id));
                             info!("New device: {}", name);
-                            let _ = notify.device_connected(&name);
+                            if let Err(e) = notify.device_connected(&name) {
+                                warn!("Failed to send connection notification: {}", e);
+                            }
                         } else {
                             error!("Failed to get device name for id: {}", id);
                         }
@@ -351,7 +355,9 @@ impl TrayApp {
                     && device.battery_level <= BATTERY_LOW_LEVEL))
         {
             info!("{}: Battery low ({}%)", device.name, device.battery_level);
-            let _ = notify.battery_low(&device.name, device.battery_level);
+            if let Err(e) = notify.battery_low(&device.name, device.battery_level) {
+                warn!("Failed to send low battery notification: {}", e);
+            }
         } else if device.old_battery_level <= 99
             && device.battery_level == 100
             && device.is_charging
@@ -360,7 +366,9 @@ impl TrayApp {
                 "{}: Battery fully charged ({}%)",
                 device.name, device.battery_level
             );
-            let _ = notify.battery_full(&device.name);
+            if let Err(e) = notify.battery_full(&device.name) {
+                warn!("Failed to send full battery notification: {}", e);
+            }
         }
     }
 }
