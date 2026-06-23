@@ -38,8 +38,8 @@ impl DeviceInfo {
                 || pid == RAZER_BASILISK_V3_PRO_WIRELESS.pid
                 || pid == RAZER_BASILISK_V3_PRO_35K_WIRED.pid
                 || pid == RAZER_BASILISK_V3_PRO_35K_WIRELESS.pid
-                || pid == RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED.pid
-                || pid == RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_PHANTOM_GREEN_EDITION_WIRED.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_PHANTOM_GREEN_EDITION_WIRELESS.pid
                 || pid == RAZER_OROCHI_V2.pid
                 || pid == RAZER_OROCHI_V2_BT.pid =>
             {
@@ -81,16 +81,16 @@ pub const RAZER_OROCHI_V2_BT: DeviceInfo =
     DeviceInfo::new("Razer Orochi V2 (Bluetooth)", 0x0095, 0, 1, 2, true);
 
 pub const RAZER_BASILISK_V3_PRO_35K_WIRED: DeviceInfo =
-    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wired)", 0x00D6, 0, 1, 2, false);
-
-pub const RAZER_BASILISK_V3_PRO_35K_WIRELESS: DeviceInfo =
-    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00D7, 0, 1, 2, false);
-
-pub const RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED: DeviceInfo =
     DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wired)", 0x00CC, 0, 1, 2, false);
 
-pub const RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS: DeviceInfo =
+pub const RAZER_BASILISK_V3_PRO_35K_WIRELESS: DeviceInfo =
     DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00CD, 0, 1, 2, false);
+
+pub const RAZER_BASILISK_V3_PRO_35K_PHANTOM_GREEN_EDITION_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K Phantom Green Edition (Wired)", 0x00D6, 0, 1, 2, false);
+
+pub const RAZER_BASILISK_V3_PRO_35K_PHANTOM_GREEN_EDITION_WIRELESS: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K Phantom Green Edition (Wireless)", 0x00D7, 0, 1, 2, false);
 
 pub const RAZER_DEVICE_LIST: [DeviceInfo; 16] = [
     RAZER_DEATHADDER_V3_PRO_WIRED,
@@ -105,8 +105,8 @@ pub const RAZER_DEVICE_LIST: [DeviceInfo; 16] = [
     RAZER_VIPER_ULTIMATE_WIRELESS,
     RAZER_BASILISK_V3_PRO_35K_WIRED,
     RAZER_BASILISK_V3_PRO_35K_WIRELESS,
-    RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED,
-    RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS,
+    RAZER_BASILISK_V3_PRO_35K_PHANTOM_GREEN_EDITION_WIRED,
+    RAZER_BASILISK_V3_PRO_35K_PHANTOM_GREEN_EDITION_WIRELESS,
     RAZER_OROCHI_V2,
     RAZER_OROCHI_V2_BT,
 ];
