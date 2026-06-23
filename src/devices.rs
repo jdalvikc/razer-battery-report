@@ -5,7 +5,7 @@ pub struct DeviceInfo {
     pub usage_page: u16,
     pub usage: u16,
     pub vid: u16,
-    pub swappable_battery: bool // current fields do not address mice that charging isn't supported (battery mice)
+    pub swappable_battery: bool
 }
 
 impl DeviceInfo {
@@ -15,7 +15,7 @@ impl DeviceInfo {
         interface: u8,
         usage_page: u16,
         usage: u16,
-        swappable_battery: bool // added parameter
+        swappable_battery: bool
     ) -> Self {
         DeviceInfo {
             name,
