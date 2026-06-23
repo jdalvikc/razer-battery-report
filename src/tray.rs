@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
-    sync::Arc,
+    sync::{Arc, OnceLock},
     thread,
     time::Duration,
 };
@@ -20,6 +20,24 @@ const DEVICE_FETCH_INTERVAL: Duration = Duration::from_secs(5);
 
 const BATTERY_CRITICAL_LEVEL: i32 = 5;
 const BATTERY_LOW_LEVEL: i32 = 15;
+
+struct CachedIcon {
+    rgba: Vec<u8>,
+    width: u32,
+    height: u32,
+}
+
+fn load_icon(icon_data: &[u8]) -> CachedIcon {
+    let image = image::load_from_memory(icon_data)
+        .expect("Failed to decode embedded icon")
+        .into_rgba8();
+    let (width, height) = image.dimensions();
+    CachedIcon {
+        rgba: image.into_raw(),
+        width,
+        height,
+    }
+}
 
 #[derive(Debug)]
 pub struct MemoryDevice {
@@ -258,25 +276,21 @@ impl TrayApp {
     }
 
     fn get_battery_icon(battery_level: i32, is_charging: bool) -> Result<tray_icon::Icon, String> {
-        let icon = match (battery_level, is_charging) {
-            (lvl, _) if lvl <= BATTERY_CRITICAL_LEVEL && !is_charging => {
-                include_bytes!("../assets/mouse_red.png").to_vec()
-            }
-            (lvl, _) if lvl <= BATTERY_LOW_LEVEL && !is_charging => {
-                include_bytes!("../assets/mouse_yellow.png").to_vec()
-            }
+        static WHITE: OnceLock<CachedIcon> = OnceLock::new();
+        static YELLOW: OnceLock<CachedIcon> = OnceLock::new();
+        static RED: OnceLock<CachedIcon> = OnceLock::new();
 
-            _ => include_bytes!("../assets/mouse_white.png").to_vec(),
+        let cached = match (battery_level, is_charging) {
+            (lvl, false) if lvl <= BATTERY_CRITICAL_LEVEL => {
+                RED.get_or_init(|| load_icon(include_bytes!("../assets/mouse_red.png")))
+            }
+            (lvl, false) if lvl <= BATTERY_LOW_LEVEL => {
+                YELLOW.get_or_init(|| load_icon(include_bytes!("../assets/mouse_yellow.png")))
+            }
+            _ => WHITE.get_or_init(|| load_icon(include_bytes!("../assets/mouse_white.png"))),
         };
 
-        let image = match image::load_from_memory(&icon) {
-            Ok(image) => image.into_rgba8(),
-            Err(e) => return Err(format!("Failed to open icon: {}", e)),
-        };
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-
-        tray_icon::Icon::from_rgba(rgba, width, height)
+        tray_icon::Icon::from_rgba(cached.rgba.clone(), cached.width, cached.height)
             .map_err(|e| format!("Failed to create icon: {}", e))
     }
 
