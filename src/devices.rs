@@ -36,6 +36,10 @@ impl DeviceInfo {
                 || pid == RAZER_DEATHADDER_V3_HYPERSPEED_WIRELESS.pid
                 || pid == RAZER_BASILISK_V3_PRO_WIRED.pid
                 || pid == RAZER_BASILISK_V3_PRO_WIRELESS.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_WIRED.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_WIRELESS.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS.pid
                 || pid == RAZER_OROCHI_V2.pid
                 || pid == RAZER_OROCHI_V2_BT.pid =>
             {
@@ -76,7 +80,19 @@ pub const RAZER_OROCHI_V2: DeviceInfo =
 pub const RAZER_OROCHI_V2_BT: DeviceInfo = 
     DeviceInfo::new("Razer Orochi V2 (Bluetooth)", 0x0095, 0, 1, 2, true);
 
-pub const RAZER_DEVICE_LIST: [DeviceInfo; 12] = [
+pub const RAZER_BASILISK_V3_PRO_35K_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wired)", 0x00D6, 0, 1, 2, false);
+
+pub const RAZER_BASILISK_V3_PRO_35K_WIRELESS: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00D7, 0, 1, 2, false);
+
+pub const RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wired)", 0x00CC, 0, 1, 2, false);
+
+pub const RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00CD, 0, 1, 2, false);
+
+pub const RAZER_DEVICE_LIST: [DeviceInfo; 16] = [
     RAZER_DEATHADDER_V3_PRO_WIRED,
     RAZER_DEATHADDER_V3_PRO_WIRELESS,
     RAZER_DEATHADDER_V3_HYPERSPEED_WIRED,
@@ -87,6 +103,10 @@ pub const RAZER_DEVICE_LIST: [DeviceInfo; 12] = [
     RAZER_BASILISK_V3_PRO_WIRELESS,
     RAZER_VIPER_ULTIMATE_WIRED,
     RAZER_VIPER_ULTIMATE_WIRELESS,
+    RAZER_BASILISK_V3_PRO_35K_WIRED,
+    RAZER_BASILISK_V3_PRO_35K_WIRELESS,
+    RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED,
+    RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS,
     RAZER_OROCHI_V2,
-    RAZER_OROCHI_V2_BT
+    RAZER_OROCHI_V2_BT,
 ];

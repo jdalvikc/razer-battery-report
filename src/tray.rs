@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
-    sync::Arc,
+    sync::{Arc, OnceLock},
     thread,
     time::Duration,
 };
@@ -20,6 +20,24 @@ const DEVICE_FETCH_INTERVAL: Duration = Duration::from_secs(5);
 
 const BATTERY_CRITICAL_LEVEL: i32 = 5;
 const BATTERY_LOW_LEVEL: i32 = 15;
+
+struct CachedIcon {
+    rgba: Vec<u8>,
+    width: u32,
+    height: u32,
+}
+
+fn load_icon(icon_data: &[u8]) -> CachedIcon {
+    let image = image::load_from_memory(icon_data)
+        .expect("Failed to decode embedded icon")
+        .into_rgba8();
+    let (width, height) = image.dimensions();
+    CachedIcon {
+        rgba: image.into_raw(),
+        width,
+        height,
+    }
+}
 
 #[derive(Debug)]
 pub struct MemoryDevice {
@@ -111,13 +129,13 @@ enum TrayEvent {
 }
 
 impl TrayApp {
-    pub fn new(debug_console: DebugConsole) -> Self {
-        Self {
-            device_manager: Arc::new(Mutex::new(DeviceManager::new())),
+    pub fn new(debug_console: DebugConsole) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            device_manager: Arc::new(Mutex::new(DeviceManager::new()?)),
             devices: Arc::new(Mutex::new(HashMap::new())),
             tray_inner: TrayInner::new(Rc::new(debug_console)),
             notify: Arc::new(Notify::new()),
-        }
+        })
     }
 
     pub fn run(&self) {
@@ -169,7 +187,9 @@ impl TrayApp {
                 for id in removed_devices {
                     if let Some(device) = devices_lock.remove(&id) {
                         info!("Device removed: {}", device.name);
-                        let _ = notify.device_disconnecred(&device.name);
+                        if let Err(e) = notify.device_disconnected(&device.name) {
+                            warn!("Failed to send disconnection notification: {}", e);
+                        }
                     }
                 }
 
@@ -178,7 +198,9 @@ impl TrayApp {
                         if let Some(name) = device_manager.lock().get_device_name(id) {
                             e.insert(MemoryDevice::new(name.clone(), id));
                             info!("New device: {}", name);
-                            let _ = notify.device_connected(&name);
+                            if let Err(e) = notify.device_connected(&name) {
+                                warn!("Failed to send connection notification: {}", e);
+                            }
                         } else {
                             error!("Failed to get device name for id: {}", id);
                         }
@@ -258,25 +280,21 @@ impl TrayApp {
     }
 
     fn get_battery_icon(battery_level: i32, is_charging: bool) -> Result<tray_icon::Icon, String> {
-        let icon = match (battery_level, is_charging) {
-            (lvl, _) if lvl <= BATTERY_CRITICAL_LEVEL && !is_charging => {
-                include_bytes!("../assets/mouse_red.png").to_vec()
-            }
-            (lvl, _) if lvl <= BATTERY_LOW_LEVEL && !is_charging => {
-                include_bytes!("../assets/mouse_yellow.png").to_vec()
-            }
+        static WHITE: OnceLock<CachedIcon> = OnceLock::new();
+        static YELLOW: OnceLock<CachedIcon> = OnceLock::new();
+        static RED: OnceLock<CachedIcon> = OnceLock::new();
 
-            _ => include_bytes!("../assets/mouse_white.png").to_vec(),
+        let cached = match (battery_level, is_charging) {
+            (lvl, false) if lvl <= BATTERY_CRITICAL_LEVEL => {
+                RED.get_or_init(|| load_icon(include_bytes!("../assets/mouse_red.png")))
+            }
+            (lvl, false) if lvl <= BATTERY_LOW_LEVEL => {
+                YELLOW.get_or_init(|| load_icon(include_bytes!("../assets/mouse_yellow.png")))
+            }
+            _ => WHITE.get_or_init(|| load_icon(include_bytes!("../assets/mouse_white.png"))),
         };
 
-        let image = match image::load_from_memory(&icon) {
-            Ok(image) => image.into_rgba8(),
-            Err(e) => return Err(format!("Failed to open icon: {}", e)),
-        };
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-
-        tray_icon::Icon::from_rgba(rgba, width, height)
+        tray_icon::Icon::from_rgba(cached.rgba.clone(), cached.width, cached.height)
             .map_err(|e| format!("Failed to create icon: {}", e))
     }
 
@@ -337,7 +355,9 @@ impl TrayApp {
                     && device.battery_level <= BATTERY_LOW_LEVEL))
         {
             info!("{}: Battery low ({}%)", device.name, device.battery_level);
-            let _ = notify.battery_low(&device.name, device.battery_level);
+            if let Err(e) = notify.battery_low(&device.name, device.battery_level) {
+                warn!("Failed to send low battery notification: {}", e);
+            }
         } else if device.old_battery_level <= 99
             && device.battery_level == 100
             && device.is_charging
@@ -346,7 +366,9 @@ impl TrayApp {
                 "{}: Battery fully charged ({}%)",
                 device.name, device.battery_level
             );
-            let _ = notify.battery_full(&device.name);
+            if let Err(e) = notify.battery_full(&device.name) {
+                warn!("Failed to send full battery notification: {}", e);
+            }
         }
     }
 }
