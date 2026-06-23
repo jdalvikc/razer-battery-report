@@ -13,11 +13,25 @@ Show your wireless Razer devices battery levels in your system tray.
 > Currently, this works only on **Windows**.
 
 ## Supported devices
-- Razer DeathAdder V3 Pro
-- Razer DeathAdder V3 HyperSpeed
-- Razer DeathAdder V2 Pro
-- Razer Basilisk V3 Pro
-- Razer Viper Ultimate
+
+| Device                                                     | USB VID:PID |
+| ---------------------------------------------------------- | ----------- |
+| Razer DeathAdder V3 Pro (Wired)                            | 1532:00B6   |
+| Razer DeathAdder V3 Pro (Wireless)                         | 1532:00B7   |
+| Razer DeathAdder V3 HyperSpeed (Wired)                     | 1532:00C4   |
+| Razer DeathAdder V3 HyperSpeed (Wireless)                  | 1532:00C5   |
+| Razer DeathAdder V2 Pro (Wired)                            | 1532:007C   |
+| Razer DeathAdder V2 Pro (Wireless)                         | 1532:007D   |
+| Razer Basilisk V3 Pro (Wired)                              | 1532:00AA   |
+| Razer Basilisk V3 Pro (Wireless)                           | 1532:00AB   |
+| Razer Basilisk V3 Pro 35K (Wired)                          | 1532:00CC   |
+| Razer Basilisk V3 Pro 35K (Wireless)                       | 1532:00CD   |
+| Razer Basilisk V3 Pro 35K Phantom Green Edition (Wired)    | 1532:00D6   |
+| Razer Basilisk V3 Pro 35K Phantom Green Edition (Wireless) | 1532:00D7   |
+| Razer Viper Ultimate (Wired)                               | 1532:007A   |
+| Razer Viper Ultimate (Wireless)                            | 1532:007B   |
+| Razer Orochi V2 (Receiver)                                 | 1532:0094   |
+| Razer Orochi V2 (Bluetooth)                                | 1532:0095   |
 
 > **Note:** If your device is not listed, you can add support for it yourself! Please see the [Adding new devices yourself](#adding-new-devices-yourself) section below. Contributions and Pull Requests are welcome!
 
@@ -30,22 +44,23 @@ Show your wireless Razer devices battery levels in your system tray.
 1. **Download** the latest `razer-battery-report.exe` from [Releases](https://github.com/xzeldon/razer-battery-report/releases/latest).
 
 2. **Move the executable** to a safe permanent location.
-   * *Recommended:* Create a folder at `C:\Program Files\Razer Battery Report\` and move the `.exe` there.
-   * *Note:* This prevents accidental deletion from your Downloads folder.
+   - _Recommended:_ Create a folder at `C:\Program Files\Razer Battery Report\` and move the `.exe` there.
+   - _Note:_ This prevents accidental deletion from your Downloads folder.
 
 3. **Add to Startup** (Recommended):
-   * Right-click `razer-battery-report.exe` -> **Create shortcut**.
-   * Press `Win + R`, type `shell:startup` and press Enter.
-   * Move the created shortcut into the opened folder.
-   * *Now the app will start automatically when you log in.*
+   - Right-click `razer-battery-report.exe` -> **Create shortcut**.
+   - Press `Win + R`, type `shell:startup` and press Enter.
+   - Move the created shortcut into the opened folder.
+   - _Now the app will start automatically when you log in._
 
 4. **Add to Start Menu** (Optional):
-   * Create another shortcut.
-   * Press `Win + R`, type `shell:programs` and press Enter.
-   * Move the shortcut into the opened folder.
-   * *Now you can search for "Razer Battery Report" in Windows Search.*
+   - Create another shortcut.
+   - Press `Win + R`, type `shell:programs` and press Enter.
+   - Move the shortcut into the opened folder.
+   - _Now you can search for "Razer Battery Report" in Windows Search._
 
 > **Tips:**
+>
 > - You can rename the shortcuts to simply **"Razer Battery Report"** (remove ".exe" and "Shortcut").
 > - **Custom Icon:**
 >   1. Download [`mouse.ico`](https://github.com/xzeldon/razer-battery-report/raw/master/assets/mouse.ico) (save it in the same folder as the `.exe`).
@@ -66,7 +81,7 @@ To build, you must have [Rust](https://www.rust-lang.org/) and
 - add device with `name`, `pid`, `interface`, `usage_page`, `usage` to [devices.rs](/src/devices.rs)
 - add `transaction_id` to switch statement in `DeviceInfo` in [devices.rs](/src/devices.rs)
 
-> You can grab `pid` and other data from the [openrazer](https://github.com/openrazer/openrazer/blob/352d13c416f42e572016c02fd10a52fc9848644a/driver/razermouse_driver.h#L9)
+> You can grab `pid` and other data from the [openrazer](https://github.com/openrazer/openrazer/blob/685290bb0128dc0b063c524b55f76f4091da9b15/driver/razermouse_driver.h)
 
 ## Todo
 
