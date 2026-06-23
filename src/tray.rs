@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{hash_map::Entry, HashMap, HashSet},
     rc::Rc,
     sync::{Arc, OnceLock},
     thread,
@@ -116,7 +116,6 @@ impl TrayInner {
 }
 
 pub struct TrayApp {
-    device_manager: Arc<Mutex<DeviceManager>>,
     devices: Arc<Mutex<HashMap<u32, MemoryDevice>>>,
     tray_inner: TrayInner,
     notify: Arc<Notify>,
@@ -124,18 +123,17 @@ pub struct TrayApp {
 
 #[derive(Debug)]
 enum TrayEvent {
-    DeviceUpdate(Vec<u32>),
+    DeviceUpdate,
     MenuEvent(MenuEvent),
 }
 
 impl TrayApp {
-    pub fn new(debug_console: DebugConsole) -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Self {
-            device_manager: Arc::new(Mutex::new(DeviceManager::new()?)),
+    pub fn new(debug_console: DebugConsole) -> Self {
+        Self {
             devices: Arc::new(Mutex::new(HashMap::new())),
             tray_inner: TrayInner::new(Rc::new(debug_console)),
             notify: Arc::new(Notify::new()),
-        })
+        }
     }
 
     pub fn run(&self) {
@@ -151,7 +149,7 @@ impl TrayApp {
 
         let proxy = event_loop.create_proxy();
 
-        self.spawn_device_fetch_thread(proxy.clone());
+        self.spawn_worker_thread(proxy.clone());
 
         self.run_event_loop(event_loop, icon, tray_menu, proxy);
     }
@@ -169,58 +167,70 @@ impl TrayApp {
             .map_err(|e| format!("Failed to create icon: {}", e))
     }
 
-    fn spawn_device_fetch_thread(&self, proxy: EventLoopProxy<TrayEvent>) {
+    fn spawn_worker_thread(&self, proxy: EventLoopProxy<TrayEvent>) {
         let devices = Arc::clone(&self.devices);
-        let device_manager = Arc::clone(&self.device_manager);
         let notify = Arc::clone(&self.notify);
 
         thread::spawn(move || {
+            let mut manager = DeviceManager::new();
             let mut last_devices = HashSet::new();
-            let mut battery_update_counter = 0;
-            loop {
-                let (removed_devices, connected_devices) = {
-                    let mut manager = device_manager.lock();
-                    manager.fetch_devices()
-                };
+            let mut battery_update_counter = 0u64;
 
-                let mut devices_lock = devices.lock();
+            loop {
+                let (removed_devices, connected_devices) = manager.fetch_devices();
+
+                let mut guard = devices.lock();
+
                 for id in removed_devices {
-                    if let Some(device) = devices_lock.remove(&id) {
+                    if let Some(device) = guard.remove(&id) {
                         info!("Device removed: {}", device.name);
-                        if let Err(e) = notify.device_disconnected(&device.name) {
-                            warn!("Failed to send disconnection notification: {}", e);
-                        }
+                        let _ = notify.device_disconnected(&device.name);
                     }
                 }
 
                 for &id in &connected_devices {
-                    if let std::collections::hash_map::Entry::Vacant(e) = devices_lock.entry(id) {
-                        if let Some(name) = device_manager.lock().get_device_name(id) {
+                    if let Entry::Vacant(e) = guard.entry(id) {
+                        if let Some(name) = manager.get_device_name(id) {
                             e.insert(MemoryDevice::new(name.clone(), id));
                             info!("New device: {}", name);
-                            if let Err(e) = notify.device_connected(&name) {
-                                warn!("Failed to send connection notification: {}", e);
-                            }
+                            let _ = notify.device_connected(&name);
                         } else {
                             error!("Failed to get device name for id: {}", id);
                         }
                     }
                 }
 
-                let current_devices: HashSet<_> = connected_devices.iter().cloned().collect();
-                if current_devices != last_devices {
-                    let _ = proxy.send_event(TrayEvent::DeviceUpdate(connected_devices));
-                    last_devices = current_devices;
+                if battery_update_counter == 0 {
+                    for (&id, device) in guard.iter_mut() {
+                        let old_level = device.battery_level;
+                        let old_charging = device.is_charging;
+
+                        if let Some(level) = manager.get_device_battery_level(id) {
+                            info!("{}  battery level: {}%", device.name, level);
+                            device.old_battery_level = device.battery_level;
+                            device.battery_level = level;
+                        }
+                        if let Some(charging) = manager.is_device_charging(id) {
+                            info!("{}  charging status: {}", device.name, charging);
+                            device.is_charging = charging;
+                        }
+
+                        if device.battery_level != old_level || device.is_charging != old_charging {
+                            check_notify(device, &notify);
+                        }
+                    }
                 }
 
-                if battery_update_counter == 0 {
-                    let device_ids: Vec<u32> = devices_lock.keys().cloned().collect();
-                    let _ = proxy.send_event(TrayEvent::DeviceUpdate(device_ids));
+                let current_devices: HashSet<u32> = manager.device_pids();
+                if current_devices != last_devices || battery_update_counter == 0 {
+                    let _ = proxy.send_event(TrayEvent::DeviceUpdate);
                 }
+                last_devices = current_devices;
 
                 battery_update_counter = (battery_update_counter + 1)
                     % (BATTERY_UPDATE_INTERVAL / DEVICE_FETCH_INTERVAL.as_secs());
 
+                drop(guard);
                 thread::sleep(DEVICE_FETCH_INTERVAL);
             }
         });
@@ -234,11 +244,9 @@ impl TrayApp {
         proxy: EventLoopProxy<TrayEvent>,
     ) {
         let devices = Arc::clone(&self.devices);
-        let device_manager = Arc::clone(&self.device_manager);
         let tray_icon = Rc::clone(&self.tray_inner.tray_icon);
         let debug_console = Rc::clone(&self.tray_inner.debug_console);
         let menu_items = Rc::clone(&self.tray_inner.menu_items);
-        let notify = Arc::clone(&self.notify);
 
         let menu_channel = MenuEvent::receiver();
 
@@ -249,8 +257,8 @@ impl TrayApp {
                 tao::event::Event::NewEvents(tao::event::StartCause::Init) => {
                     TrayInner::build_tray(&tray_icon, &tray_menu, icon.clone());
                 }
-                tao::event::Event::UserEvent(TrayEvent::DeviceUpdate(device_ids)) => {
-                    Self::update(&devices, &device_manager, &device_ids, &tray_icon, &notify);
+                tao::event::Event::UserEvent(TrayEvent::DeviceUpdate) => {
+                    Self::update_tray_ui(&devices, &tray_icon);
                 }
                 tao::event::Event::UserEvent(TrayEvent::MenuEvent(event)) => {
                     let menu_items = menu_items.lock();
@@ -279,6 +287,32 @@ impl TrayApp {
         });
     }
 
+    fn update_tray_ui(
+        devices: &Arc<Mutex<HashMap<u32, MemoryDevice>>>,
+        tray_icon: &Rc<Mutex<Option<TrayIcon>>>,
+    ) {
+        let guard = devices.lock();
+        let Some(device) = guard.values().next() else {
+            return;
+        };
+
+        if device.battery_level == -1 {
+            return;
+        }
+
+        if let Ok(new_icon) = Self::get_battery_icon(device.battery_level, device.is_charging) {
+            if let Some(tray) = tray_icon.lock().as_mut() {
+                let _ = tray.set_icon(Some(new_icon));
+                let _ = tray.set_tooltip(Some(format!(
+                    "{}: {}%{}",
+                    device.name,
+                    device.battery_level,
+                    if device.is_charging { " (charging)" } else { "" }
+                )));
+            }
+        }
+    }
+
     fn get_battery_icon(battery_level: i32, is_charging: bool) -> Result<tray_icon::Icon, String> {
         static WHITE: OnceLock<CachedIcon> = OnceLock::new();
         static YELLOW: OnceLock<CachedIcon> = OnceLock::new();
@@ -297,78 +331,32 @@ impl TrayApp {
         tray_icon::Icon::from_rgba(cached.rgba.clone(), cached.width, cached.height)
             .map_err(|e| format!("Failed to create icon: {}", e))
     }
+}
 
-    fn update(
-        devices: &Arc<Mutex<HashMap<u32, MemoryDevice>>>,
-        manager: &Arc<Mutex<DeviceManager>>,
-        device_ids: &[u32],
-        tray_icon: &Rc<Mutex<Option<TrayIcon>>>,
-        notify: &Arc<Notify>,
-    ) {
-        let mut devices = devices.lock();
-        let manager = manager.lock();
-
-        for &id in device_ids {
-            if let Some(device) = devices.get_mut(&id) {
-                if let (Some(battery_level), Some(is_charging)) = (
-                    manager.get_device_battery_level(id),
-                    manager.is_device_charging(id),
-                ) {
-                    info!("{}  battery level: {}%", device.name, battery_level);
-                    info!("{}  charging status: {}", device.name, is_charging);
-
-                    device.old_battery_level = device.battery_level;
-                    device.battery_level = battery_level;
-                    device.is_charging = is_charging;
-
-                    Self::check_notify(device, notify);
-
-                    if device.old_battery_level != battery_level
-                        || device.is_charging != is_charging
-                    {
-                        if let Ok(new_icon) = Self::get_battery_icon(battery_level, is_charging) {
-                            if let Some(tray_icon) = tray_icon.lock().as_mut() {
-                                if let Err(e) = tray_icon.set_icon(Some(new_icon)) {
-                                    warn!("Failed to update tray icon: {}", e);
-                                }
-                            }
-                        }
-                    }
-
-                    if let Some(tray_icon) = tray_icon.lock().as_mut() {
-                        let _ = tray_icon
-                            .set_tooltip(Some(format!("{}: {}%", device.name, battery_level)));
-                    }
-                }
-            }
-        }
+fn check_notify(device: &MemoryDevice, notify: &Notify) {
+    if device.battery_level == -1 {
+        return;
     }
 
-    fn check_notify(device: &MemoryDevice, notify: &Notify) {
-        if device.battery_level == -1 {
-            return;
+    if !device.is_charging
+        && (device.battery_level <= BATTERY_CRITICAL_LEVEL
+            || (device.old_battery_level > BATTERY_LOW_LEVEL
+                && device.battery_level <= BATTERY_LOW_LEVEL))
+    {
+        info!("{}: Battery low ({}%)", device.name, device.battery_level);
+        if let Err(e) = notify.battery_low(&device.name, device.battery_level) {
+            warn!("Failed to send low battery notification: {}", e);
         }
-
-        if !device.is_charging
-            && (device.battery_level <= BATTERY_CRITICAL_LEVEL
-                || (device.old_battery_level > BATTERY_LOW_LEVEL
-                    && device.battery_level <= BATTERY_LOW_LEVEL))
-        {
-            info!("{}: Battery low ({}%)", device.name, device.battery_level);
-            if let Err(e) = notify.battery_low(&device.name, device.battery_level) {
-                warn!("Failed to send low battery notification: {}", e);
-            }
-        } else if device.old_battery_level <= 99
-            && device.battery_level == 100
-            && device.is_charging
-        {
-            info!(
-                "{}: Battery fully charged ({}%)",
-                device.name, device.battery_level
-            );
-            if let Err(e) = notify.battery_full(&device.name) {
-                warn!("Failed to send full battery notification: {}", e);
-            }
+    } else if device.old_battery_level <= 99
+        && device.battery_level == 100
+        && device.is_charging
+    {
+        info!(
+            "{}: Battery fully charged ({}%)",
+            device.name, device.battery_level
+        );
+        if let Err(e) = notify.battery_full(&device.name) {
+            warn!("Failed to send full battery notification: {}", e);
         }
     }
 }
