@@ -34,7 +34,9 @@ impl DeviceInfo {
                 || pid == RAZER_BASILISK_V3_PRO_WIRED.pid
                 || pid == RAZER_BASILISK_V3_PRO_WIRELESS.pid
                 || pid == RAZER_BASILISK_V3_PRO_35K_WIRED.pid
-                || pid == RAZER_BASILISK_V3_PRO_35K_WIRELESS.pid =>
+                || pid == RAZER_BASILISK_V3_PRO_35K_WIRELESS.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED.pid
+                || pid == RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS.pid =>
             {
                 0x1F
             }
@@ -74,7 +76,13 @@ pub const RAZER_BASILISK_V3_PRO_35K_WIRED: DeviceInfo =
 pub const RAZER_BASILISK_V3_PRO_35K_WIRELESS: DeviceInfo =
     DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00D7, 0, 1, 2);
 
-pub const RAZER_DEVICE_LIST: [DeviceInfo; 12] = [
+pub const RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wired)", 0x00CC, 0, 1, 2);
+
+pub const RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS: DeviceInfo =
+    DeviceInfo::new("Razer Basilisk V3 Pro 35K (Wireless)", 0x00CD, 0, 1, 2);
+
+pub const RAZER_DEVICE_LIST: [DeviceInfo; 14] = [
     RAZER_DEATHADDER_V3_PRO_WIRED,
     RAZER_DEATHADDER_V3_PRO_WIRELESS,
     RAZER_DEATHADDER_V3_HYPERSPEED_WIRED,
@@ -87,4 +95,6 @@ pub const RAZER_DEVICE_LIST: [DeviceInfo; 12] = [
     RAZER_VIPER_ULTIMATE_WIRELESS,
     RAZER_BASILISK_V3_PRO_35K_WIRED,
     RAZER_BASILISK_V3_PRO_35K_WIRELESS,
+    RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRED,
+    RAZER_BASILISK_V3_PRO_35K_STANDARD_WIRELESS,
 ];
