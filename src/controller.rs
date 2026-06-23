@@ -109,15 +109,12 @@ impl DeviceController {
         let c_path = CString::new(path)?;
         let handle = api.open_path(c_path.as_ref())?;
 
-        let transaction_id = RAZER_DEVICE_LIST
+        let device_info = RAZER_DEVICE_LIST
             .iter()
-            .find(|device| device.pid == pid)
-            .map_or(0x3F, |device| device.transaction_id());
+            .find(|device| device.pid == pid);
 
-        let swappable_battery: bool = RAZER_DEVICE_LIST
-            .iter()
-            .find(|device| device.pid == pid)
-            .map_or(false, |device| device.swappable_battery);
+        let transaction_id = device_info.map_or(0x3F, |device| device.transaction_id());
+        let swappable_battery = device_info.map_or(false, |device| device.swappable_battery);
 
         Ok(DeviceController {
             handle,
