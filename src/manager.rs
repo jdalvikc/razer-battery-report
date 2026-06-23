@@ -14,11 +14,11 @@ pub struct DeviceManager {
 }
 
 impl DeviceManager {
-    pub fn new() -> Self {
-        Self {
-            api: HidApi::new().unwrap(),
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            api: HidApi::new()?,
             device_controllers: Arc::new(Mutex::new(Vec::new())),
-        }
+        })
     }
 
     pub fn fetch_devices(&mut self) -> (Vec<u32>, Vec<u32>) {

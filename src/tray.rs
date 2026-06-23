@@ -129,13 +129,13 @@ enum TrayEvent {
 }
 
 impl TrayApp {
-    pub fn new(debug_console: DebugConsole) -> Self {
-        Self {
-            device_manager: Arc::new(Mutex::new(DeviceManager::new())),
+    pub fn new(debug_console: DebugConsole) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            device_manager: Arc::new(Mutex::new(DeviceManager::new()?)),
             devices: Arc::new(Mutex::new(HashMap::new())),
             tray_inner: TrayInner::new(Rc::new(debug_console)),
             notify: Arc::new(Notify::new()),
-        }
+        })
     }
 
     pub fn run(&self) {
